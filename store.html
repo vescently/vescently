@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>vescently | store</title>
+  <meta name="description" content="Vescently store countdown and collection date guessing game." />
+  <link rel="stylesheet" type="text/css" href="./styles/site.css">
+  <style>
+    :root{
+      --bg:#050505;
+      --panel:#0d0d0d;
+      --panel-2:#121212;
+      --line:rgba(255,255,255,.12);
+      --soft:rgba(255,255,255,.72);
+      --muted:rgba(255,255,255,.55);
+      --accent:#ffffff;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;background:var(--bg);color:#fff}
+    body{font-family:'Archivo', Arial, sans-serif; min-height:100vh}
+    a{color:inherit;text-decoration:none}
+    .store-shell{min-height:100vh;background:radial-gradient(circle at top, rgba(255,255,255,.06), transparent 28%), var(--bg)}
+    .store-topbar{
+      position:sticky; top:0; z-index:30; backdrop-filter:blur(12px);
+      background:rgba(5,5,5,.78); border-bottom:1px solid var(--line);
+    }
+    .store-topbar-inner{
+      max-width:1180px; margin:0 auto; padding:18px 24px; display:flex; align-items:center; justify-content:space-between; gap:20px;
+    }
+    .store-brand{font-size:16px; letter-spacing:.28em; text-transform:uppercase}
+    .store-nav{display:flex; gap:16px; align-items:center; flex-wrap:wrap}
+    .store-nav a{font-size:12px; letter-spacing:.16em; text-transform:uppercase; opacity:.78}
+    .store-nav a:hover,.store-nav a.is-active{opacity:1}
+    .store-main{max-width:1180px; margin:0 auto; padding:34px 24px 80px}
+    .hero{padding:56px 0 26px; display:grid; grid-template-columns:1.15fr .85fr; gap:26px; align-items:stretch}
+    .panel{
+      background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border:1px solid var(--line); border-radius:26px; box-shadow:0 18px 80px rgba(0,0,0,.32);
+    }
+    .hero-copy{padding:38px}
+    .eyebrow{font-size:11px; letter-spacing:.22em; text-transform:uppercase; color:var(--soft)}
+    h1{margin:12px 0 14px; font-size:clamp(2.2rem, 5vw, 4.75rem); line-height:.95; letter-spacing:-.04em}
+    .hero-copy p{max-width:58ch; color:var(--soft); line-height:1.65; font-size:15px}
+    .pill-row{display:flex; gap:10px; flex-wrap:wrap; margin-top:20px}
+    .pill{padding:10px 14px; border:1px solid var(--line); border-radius:999px; font-size:12px; letter-spacing:.12em; text-transform:uppercase; color:var(--soft)}
+    .hero-side{padding:24px; display:flex; flex-direction:column; justify-content:space-between}
+    .mini-label{font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--muted); margin-bottom:14px}
+    .countdown-grid{display:grid; grid-template-columns:repeat(4,1fr); gap:12px}
+    .time-card{padding:18px 12px; border-radius:20px; background:var(--panel-2); border:1px solid var(--line); text-align:center}
+    .time-card strong{display:block; font-size:clamp(1.7rem, 4vw, 2.8rem); line-height:1}
+    .time-card span{display:block; margin-top:8px; color:var(--muted); font-size:11px; letter-spacing:.16em; text-transform:uppercase}
+    .target-date{margin-top:16px; padding:14px 16px; border-radius:16px; background:rgba(255,255,255,.03); border:1px solid var(--line); color:var(--soft); line-height:1.6}
+    .target-date code{font-family:ui-monospace, SFMono-Regular, Menlo, monospace; color:#fff}
+    .sections{display:grid; grid-template-columns:1fr 1fr; gap:26px; margin-top:26px}
+    .section{padding:28px}
+    h2{margin:0 0 12px; font-size:1.5rem; letter-spacing:-.03em}
+    .section p{margin:0 0 16px; color:var(--soft); line-height:1.65}
+    .status-stack{display:grid; gap:12px; margin-top:18px}
+    .status-card{padding:16px 18px; border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.025)}
+    .status-card strong{display:block; font-size:13px; letter-spacing:.12em; text-transform:uppercase; margin-bottom:6px}
+    .status-card span{color:var(--muted); font-size:14px; line-height:1.55}
+    .guess-wrap{margin-top:18px}
+    .guess-controls{display:grid; grid-template-columns:1fr auto; gap:12px}
+    button{
+      border:none; outline:none; font:inherit;
+    }
+    select{
+      width:100%; padding:16px 18px; border-radius:18px; background:#111; color:#fff;
+      border:1px solid var(--line); appearance:none;
+    }
+    button{
+      padding:16px 18px; border-radius:18px; background:#fff; color:#000; cursor:pointer; font-weight:600;
+      transition:transform .18s ease, opacity .18s ease;
+    }
+    button:hover{transform:translateY(-1px)}
+    .guess-result{min-height:56px; margin-top:14px; padding:14px 16px; border-radius:18px; border:1px solid var(--line); background:rgba(255,255,255,.025); color:var(--soft); line-height:1.5}
+    .guess-result.win{background:rgba(255,255,255,.08); color:#fff}
+    .guess-meta{display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:14px; color:var(--muted); font-size:12px; letter-spacing:.08em; text-transform:uppercase}
+    .footer-note{margin-top:26px; text-align:center; color:var(--muted); font-size:12px; letter-spacing:.14em; text-transform:uppercase}
+    .footer-note code{color:#fff}
+    @media (max-width: 900px){
+      .hero,.sections{grid-template-columns:1fr}
+    }
+    @media (max-width: 640px){
+      .store-topbar-inner,.store-main{padding-left:16px; padding-right:16px}
+      .hero-copy,.hero-side,.section{padding:22px}
+      .countdown-grid{grid-template-columns:repeat(2,1fr)}
+      .guess-controls{grid-template-columns:1fr}
+      .store-brand{letter-spacing:.2em}
+    }
+  </style>
+</head>
+<body>
+  <div class="store-shell">
+    <header class="store-topbar">
+      <div class="store-topbar-inner">
+        <a class="store-brand" href="./index.html">vescently</a>
+        <nav class="store-nav" aria-label="Main navigation">
+          <a href="./index.html">Home</a>
+          <a class="is-active" href="./store.html">Store</a>
+          <a href="http://instagram.com/vescently" target="_blank" rel="noopener noreferrer">Instagram</a>
+          <a href="http://tiktok.com/@vescently" target="_blank" rel="noopener noreferrer">TikTok</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="store-main">
+      <section class="hero">
+        <div class="panel hero-copy">
+          <div class="eyebrow">collection zero / not for sale yet</div>
+          <h1>Masked<br>by delays lol.</h1>
+          <p>
+            Coming soon; play the game to guess the day!
+          </p>
+          <div class="pill-row">
+            <div class="pill">drop pending</div>
+            <div class="pill">guess the date</div>
+            <div class="pill">collection archive</div>
+          </div>
+        </div>
+
+        
+<aside class="panel hero-side">
+<div class="mini-label">collection drop</div>
+<div style="padding:10px;color:rgba(255,255,255,.7);line-height:1.6">
+not public yet  
+</div>
+</aside>
+
+      </section>
+
+      <section class="sections">
+        <div class="panel section">
+          <div class="mini-label">store status</div>
+          <h2>Nothing for sale yet, by design.</h2>
+          <p>
+            @vescently on all socials ----- stay tuned for updates
+          </p>
+          <div class="status-stack">
+            <div class="status-card">
+              <strong>collection one</strong>
+              <span>In development. Product photos, names, and pricing can slide in here later without rebuilding the whole page.</span>
+            </div>
+            <div class="status-card">
+              <strong>shipping</strong>
+              <span>Closed until launch. Swap this text for shipping regions, processing times, or preorder details when you are ready.</span>
+            </div>
+            <div class="status-card">
+              <strong>newsletter / sms</strong>
+              <span>Optional future slot for early access. Right now it stays clean and uncluttered.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel section">
+          <div class="mini-label">drop-date game</div>
+          <h2>Guess the exact day.</h2>
+          <p>
+            Type your guess in full date format and see how close you are. There is also one hidden word. Find it, and you unlock a future 10% discount code for the collection.
+          </p>
+          <div class="guess-wrap">
+            <div class="guess-controls">
+              <input id="guessInput" type="text" placeholder="Example: June 3rd, 2026" style="width:100%;padding:16px 18px;border-radius:18px;background:#111;color:#fff;border:1px solid rgba(255,255,255,.12);">
+              <button id="guessButton" type="button">Check guess</button>
+            </div>
+            <div class="guess-result" id="guessResult">Type a date and take your shot.</div>
+            <div class="guess-meta">
+              <span id="attemptCount">Attempts: 0</span>
+              <span id="correctAnswerLabel">One exact day exists</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <div class="footer-note">
+      </div>
+    </main>
+  </div>
+
+  <script>
+    
+// Actual hidden drop date
+const COLLECTION_DATE = "2026-06-21";
+const target = new Date(COLLECTION_DATE);
+
+const guessInput = document.getElementById('guessInput');
+const guessButton = document.getElementById('guessButton');
+const guessResult = document.getElementById('guessResult');
+const attemptCount = document.getElementById('attemptCount');
+
+let attempts = 0;
+
+function cleanDateString(str){
+  return str.toLowerCase().replace(/(st|nd|rd|th)/g,'');
+}
+
+function compareGuess(){
+  const raw = guessInput.value.trim();
+  if(!raw){
+    guessResult.classList.remove('win');
+    guessResult.textContent = "Type a full date like: March 28th, 2026.";
+    return;
+  }
+
+  attempts++;
+  attemptCount.textContent = "Attempts: " + attempts;
+
+  if(raw.toLowerCase() === "never"){
+    guessResult.classList.add('win');
+    guessResult.innerHTML = "You found the hidden word. Save this for the future drop: <strong>Guessr</strong> for 10% off.";
+    return;
+  }
+  
+
+  const parsed = new Date(cleanDateString(raw));
+  if(isNaN(parsed)){
+    guessResult.classList.remove('win');
+    guessResult.textContent = "Could not read that date. Try format: June 3rd, 2026.";
+    return;
+  }
+
+  const guessedDay = new Date(parsed.getFullYear(),parsed.getMonth(),parsed.getDate()).getTime();
+  const targetDay = new Date(target.getFullYear(),target.getMonth(),target.getDate()).getTime();
+
+  const diffDays = Math.round((guessedDay-targetDay)/86400000);
+
+  if(diffDays===0){
+    guessResult.classList.add('win');
+    guessResult.innerHTML = "Correct. The Vescently drop lands on <strong>"+target.toDateString()+"</strong>.";
+  }else{
+    guessResult.classList.remove('win');
+    const dir = diffDays<0 ? "early" : "late";
+    guessResult.textContent = "Close, but your guess is "+Math.abs(diffDays)+" day"+(Math.abs(diffDays)==1?"":"s")+" "+dir+".";
+  }
+}
+
+guessButton.addEventListener("click",compareGuess);
+  </script>
+</body>
+</html>
